@@ -9,6 +9,7 @@ import host.directory
 import host.file
 import host.pipe
 import writer show Writer
+import system
 
 TESTS ::= [
   {:},
@@ -106,7 +107,7 @@ run_test file_mapping/Map tmp_dir [generate_ar]:
       expect_null file
 
   // FreeRTOS doesn't have `ar`.
-  if platform == "FreeRTOS": return
+  if system.platform == "FreeRTOS": return
 
   test_path := "$tmp_dir/test.a"
   stream := file.Stream.for_write test_path
