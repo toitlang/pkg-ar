@@ -4,11 +4,10 @@
 
 import expect show *
 import ar show *
-import bytes
 import host.directory
 import host.file
 import host.pipe
-import writer show Writer
+import io
 import system
 
 TESTS ::= [
@@ -32,7 +31,7 @@ TESTS ::= [
 ]
 
 write-ar file-mapping/Map --add-with-ar-file/bool=false:
-  writer := bytes.Buffer
+  writer := io.Buffer
   ar-writer := ArWriter writer
   file-mapping.do: |name content|
     if add-with-ar-file:
@@ -47,7 +46,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
 
   seen := {}
   count := 0
-  ar-reader := ArReader (bytes.Reader ba)
+  ar-reader := ArReader (io.Reader ba)
   ar-reader.do: |file/ArFile|
     count++
     seen.add file.name
@@ -70,7 +69,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
   expect-equals seen.size count
   expect-equals file-mapping.size count
 
-  ar-reader = ArReader (bytes.Reader ba)
+  ar-reader = ArReader (io.Reader ba)
   // We should find all files if we advance from top to bottom.
   last-name := null
   file-mapping.do: |name content|
@@ -86,7 +85,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
     actual := ba.copy file-offsets.from file-offsets.to
     expect-equals content actual
 
-  ar-reader = ArReader (bytes.Reader ba)
+  ar-reader = ArReader (io.Reader ba)
   ar-file := ar-reader.find "not there"
   expect-null ar-file
   if last-name:
@@ -111,7 +110,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
 
   test-path := "$tmp-dir/test.a"
   stream := file.Stream.for-write test-path
-  (Writer stream).write ba
+  stream.out.write ba
   stream.close
   file-mapping.do: |name expected-content|
     actual := extract test-path name
@@ -121,7 +120,8 @@ extract archive-file contained-file -> ByteArray:
   // 'p' prints the $contained_file onto stdout.
   from := pipe.from "ar" "p" archive-file contained-file
   result := ByteArray 0
-  while next := from.read:
+  reader := from.in
+  while next := reader.read:
     result += next
   from.close
   return result
