@@ -3,8 +3,8 @@
 // found in the package's LICENSE file.
 
 import bytes
-import writer show Writer
-import reader show Reader BufferedReader
+import io
+import reader show Reader
 
 AR-HEADER_ ::= "!<arch>\x0A"
 
@@ -41,10 +41,19 @@ An 'ar' archiver.
 Writes the given files into the writer in the 'ar' file format.
 */
 class ArWriter:
-  writer_ ::= ?
+  writer_/io.Writer ::= ?
 
+  /**
+  Takes an $io.Writer as argument.
+
+  For compatibility reasons, also accepts an "old-style" writer. This is
+    deprecated and will be removed in the future.
+  */
   constructor writer:
-    writer_ = Writer writer
+    if writer is io.Writer:
+      writer_ = writer
+    else:
+      writer_ = io.Writer.adapt writer
     write-ar-header_
 
   /**
@@ -151,15 +160,18 @@ class ArFileOffsets:
   constructor .name .from .to:
 
 class ArReader:
-  reader_ / BufferedReader
+  reader_ / io.Reader
   offset_ / int := 0
 
   constructor reader/Reader:
-    reader_ = BufferedReader reader
+    if reader is io.Reader:
+      reader_ = reader as io.Reader
+    else:
+      reader_ = io.Reader.adapt reader
     skip-header_
 
   constructor.from-bytes buffer/ByteArray:
-    return ArReader (bytes.Reader buffer)
+    return ArReader (io.Reader buffer)
 
   /// Returns the next file in the archive.
   /// Returns null if none is left.
@@ -246,7 +258,7 @@ class ArReader:
   is-padded_ size/int: return size & 1 == 1
 
   read-name_ -> string?:
-    if not reader_.can-ensure 1: return null
+    if not reader_.try-ensure-buffered 1: return null
     name / string := reader-read-string_ FILE-NAME-SIZE_
     name = name.trim --right
     if name.ends-with "/": name = name.trim --right "/"

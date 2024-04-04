@@ -1,4 +1,4 @@
 name: ar
 description: Toit package for reading and writing 'ar' (archive) files.
 environment:
-  sdk: ^2.0.0-alpha.121
+  sdk: ^2.0.0-alpha.144
