@@ -63,11 +63,11 @@ class ArWriter:
     by 'ar' when using the 'D' (deterministic) option. For example, the
     modification date is set to 0 (epoch time).
   */
-  add name/string content -> none:
+  add name/string content/io.Data -> none:
     if name.size > FILE-NAME-SIZE_: throw "Filename too long"
-    write-ar-file-header_ name content.size
+    write-ar-file-header_ name content.byte-size
     writer_.write content
-    if needs-padding_ content.size:
+    if needs-padding_ content.byte-size:
       writer_.write PADDING-STRING_
 
   /**
