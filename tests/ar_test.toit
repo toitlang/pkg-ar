@@ -13,19 +13,19 @@ import system
 TESTS ::= [
   {:},
   {"odd": "odd".to-byte-array},
-  {"even": "even".to-byte-array},
+  {"even": "even"},
   {
     "even": "even".to-byte-array,
-    "odd": "odd".to-byte-array,
+    "odd": "odd",
   },
   {
     "odd": "odd".to-byte-array,
-    "even": "even".to-byte-array,
+    "even": "even",
   },
   {
     "binary": #[0, 1, 2, 255],
     "newlines": "\n\n\n\n".to-byte-array,
-    "newlines2": "\a\a\a\a\a".to-byte-array,
+    "newlines2": "\a\a\a\a\a",
     "big": ("the quick brown fox jumps over the lazy dog" * 1000).to-byte-array
   },
 ]
@@ -35,6 +35,8 @@ write-ar file-mapping/Map --add-with-ar-file/bool=false:
   ar-writer := ArWriter writer
   file-mapping.do: |name content|
     if add-with-ar-file:
+      // The `ArFile` only takes byte arrays.
+      if content is string: content = content.to-byte-array
       ar-writer.add
           ArFile name content
     else:
@@ -51,6 +53,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
     count++
     seen.add file.name
     expected := file-mapping[file.name]
+    if expected is string: expected = expected.to-byte-array
     expect-equals expected file.content
   // No file was seen twice.
   expect-equals seen.size count
@@ -63,6 +66,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
     count++
     seen.add file-offsets.name
     expected := file-mapping[file-offsets.name]
+    if expected is string: expected = expected.to-byte-array
     actual := ba.copy file-offsets.from file-offsets.to
     expect-equals expected actual
   // No file was seen twice.
@@ -75,7 +79,8 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
   file-mapping.do: |name content|
     last-name = name
     file := ar-reader.find name
-    expect-equals content file.content
+    expected := content is ByteArray ? content : content.to-byte-array
+    expect-equals expected file.content
 
   ar-reader = ArReader.from-bytes ba
   // We should find all files if we advance from top to bottom.
@@ -83,7 +88,8 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
     last-name = name
     file-offsets := ar-reader.find --offsets name
     actual := ba.copy file-offsets.from file-offsets.to
-    expect-equals content actual
+    expected := content is ByteArray ? content : content.to-byte-array
+    expect-equals expected actual
 
   ar-reader = ArReader (io.Reader ba)
   ar-file := ar-reader.find "not there"
@@ -114,6 +120,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
   stream.close
   file-mapping.do: |name expected-content|
     actual := extract test-path name
+    if expected-content is string: expected-content = expected-content.to-byte-array
     expect-equals expected-content actual
 
 extract archive-file contained-file -> ByteArray:
