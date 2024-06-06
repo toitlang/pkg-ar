@@ -35,7 +35,7 @@ write-ar file-mapping/Map --add-with-ar-file/bool=false:
   ar-writer := ArWriter writer
   file-mapping.do: |name content|
     if add-with-ar-file:
-      // The `ArFile` only takes ByteArrays.
+      // The `ArFile` only takes byte arrays.
       if content is string: content = content.to-byte-array
       ar-writer.add
           ArFile name content
