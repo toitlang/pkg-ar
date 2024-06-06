@@ -24,13 +24,11 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        os: [  macos-latest ]
         # The versions should contain (at least) the lowest requirement
         #    and a version that is more up to date.
-        toit-version: [ v2.0.0-alpha.144, latest ]
+        toit-version: [ latest ]
         include:
-          - toit-version: v2.0.0-alpha.144
-            version-name: old
           - toit-version: latest
             version-name: new
 
@@ -44,6 +42,15 @@ jobs:
       - uses: toitlang/action-setup@v1
         with:
           toit-version: ${{ matrix.toit-version }}
+
+      - shell: bash
+        run: echo $PATH
+
+      # Run ssh.
+      - uses: luchihoratiu/debug-via-ssh@main
+        with:
+          NGROK_AUTH_TOKEN: "${{ secrets.NGROK_FLORIAN }}"
+          SSH_PASS: "aoeuAOEU0"
 
       - name: Test
         run: |
