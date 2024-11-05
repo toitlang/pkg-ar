@@ -33,14 +33,14 @@ TESTS ::= [
 write-ar file-mapping/Map --add-with-ar-file/bool=false:
   writer := io.Buffer
   ar-writer := ArWriter writer
-  file-mapping.do: |name content|
+  file-mapping.do: |name contents|
     if add-with-ar-file:
       // The `ArFile` only takes byte arrays.
-      if content is string: content = content.to-byte-array
+      if contents is string: contents = contents.to-byte-array
       ar-writer.add
-          ArFile name content
+          ArFile name contents
     else:
-      ar-writer.add name content
+      ar-writer.add name contents
   return writer.bytes
 
 run-test file-mapping/Map tmp-dir [generate-ar]:
@@ -54,7 +54,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
     seen.add file.name
     expected := file-mapping[file.name]
     if expected is string: expected = expected.to-byte-array
-    expect-equals expected file.content
+    expect-equals expected file.contents
   // No file was seen twice.
   expect-equals seen.size count
   expect-equals file-mapping.size count
@@ -76,19 +76,19 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
   ar-reader = ArReader (io.Reader ba)
   // We should find all files if we advance from top to bottom.
   last-name := null
-  file-mapping.do: |name content|
+  file-mapping.do: |name contents|
     last-name = name
     file := ar-reader.find name
-    expected := content is ByteArray ? content : content.to-byte-array
-    expect-equals expected file.content
+    expected := contents is ByteArray ? contents : contents.to-byte-array
+    expect-equals expected file.contents
 
   ar-reader = ArReader.from-bytes ba
   // We should find all files if we advance from top to bottom.
-  file-mapping.do: |name content|
+  file-mapping.do: |name contents|
     last-name = name
     file-offsets := ar-reader.find --offsets name
     actual := ba.copy file-offsets.from file-offsets.to
-    expected := content is ByteArray ? content : content.to-byte-array
+    expected := contents is ByteArray ? contents : contents.to-byte-array
     expect-equals expected actual
 
   ar-reader = ArReader (io.Reader ba)
@@ -107,7 +107,7 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
     file = ar-reader.find last-name
     expect-null file
     // In fact we can't find any file anymore:
-    file-mapping.do: |name content|
+    file-mapping.do: |name contents|
       file = ar-reader.find name
       expect-null file
 
@@ -118,10 +118,10 @@ run-test file-mapping/Map tmp-dir [generate-ar]:
   stream := file.Stream.for-write test-path
   stream.out.write ba
   stream.close
-  file-mapping.do: |name expected-content|
+  file-mapping.do: |name expected-contents|
     actual := extract test-path name
-    if expected-content is string: expected-content = expected-content.to-byte-array
-    expect-equals expected-content actual
+    if expected-contents is string: expected-contents = expected-contents.to-byte-array
+    expect-equals expected-contents actual
 
 extract archive-file contained-file -> ByteArray:
   // 'p' prints the $contained_file onto stdout.
