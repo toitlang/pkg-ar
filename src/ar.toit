@@ -63,19 +63,19 @@ class ArWriter:
     by 'ar' when using the 'D' (deterministic) option. For example, the
     modification date is set to 0 (epoch time).
   */
-  add name/string content/io.Data -> none:
+  add name/string contents/io.Data -> none:
     if name.size > FILE-NAME-SIZE_: throw "Filename too long"
-    write-ar-file-header_ name content.byte-size
-    writer_.write content
-    if needs-padding_ content.byte-size:
+    write-ar-file-header_ name contents.byte-size
+    writer_.write contents
+    if needs-padding_ contents.byte-size:
       writer_.write PADDING-STRING_
 
   /**
-  Variant of $(add name content).
+  Variant of $(add name contents).
   Adds a new $ar-file to the ar-archive.
   */
   add ar-file/ArFile -> none:
-    add ar-file.name ar-file.content
+    add ar-file.name ar-file.contents
 
   write-ar-header_:
     writer_.write AR-HEADER_
@@ -110,7 +110,7 @@ class ArWriter:
   write-octal_ n/int header/ByteArray offset/int size/int:
     write-number_ --base=8 n header offset size
 
-  write-ar-file-header_ name/string content-size/int:
+  write-ar-file-header_ name/string contents-size/int:
     header := ByteArray FILE-HEADER-SIZE_
     write-string_ name
         header
@@ -132,7 +132,7 @@ class ArWriter:
         header
         FILE-MODE-OFFSET_
         FILE-MODE-SIZE_
-    write-decimal_ content-size
+    write-decimal_ contents-size
         header
         FILE-BYTE-SIZE-OFFSET_
         FILE-BYTE-SIZE-SIZE_
@@ -148,9 +148,13 @@ class ArWriter:
 
 class ArFile:
   name / string
-  content / ByteArray
+  contents / ByteArray
 
-  constructor .name .content:
+  constructor .name .contents:
+
+  /** Deprecated. Use $contents instead. */
+  content -> ByteArray:
+    return contents
 
 class ArFileOffsets:
   name / string
@@ -179,8 +183,8 @@ class ArReader:
     name := read-name_
     if not name: return null
     byte-size := read-byte-size-skip-ignored-header_
-    content := read-content_ byte-size
-    return ArFile name content
+    contents := read-contents_ byte-size
+    return ArFile name contents
 
   /**
   Returns the next $ArFileOffsets, or `null` if no file is left.
@@ -190,9 +194,9 @@ class ArReader:
     name := read-name_
     if not name: return null
     byte-size := read-byte-size-skip-ignored-header_
-    content-offset := offset_
-    skip-content_ byte-size
-    return ArFileOffsets name content-offset (content-offset + byte-size)
+    contents-offset := offset_
+    skip-contents_ byte-size
+    return ArFileOffsets name contents-offset (contents-offset + byte-size)
 
   /// Invokes the given $block on each $ArFile of the archive.
   do [block]:
@@ -218,9 +222,9 @@ class ArReader:
       if not file-name: return null
       byte-size := read-byte-size-skip-ignored-header_
       if file-name == name:
-        content := read-content_ byte-size
-        return ArFile name content
-      skip-content_ byte-size
+        contents := read-contents_ byte-size
+        return ArFile name contents
+      skip-contents_ byte-size
 
   /**
   Finds the given $name file in the archive.
@@ -237,9 +241,9 @@ class ArReader:
       byte-size := read-byte-size-skip-ignored-header_
       if file-name == name:
         file-offset := offset_
-        skip-content_ byte-size
+        skip-contents_ byte-size
         return ArFileOffsets name file-offset (file-offset + byte-size)
-      skip-content_ byte-size
+      skip-contents_ byte-size
 
   skip-header_:
     header := reader-read-string_ AR-HEADER_.size
@@ -277,12 +281,12 @@ class ArReader:
       throw "INVALID_AR_FORMAT"
     return byte-size
 
-  read-content_ byte-size/int -> ByteArray:
-    content := reader-read-bytes_ byte-size
+  read-contents_ byte-size/int -> ByteArray:
+    contents := reader-read-bytes_ byte-size
     if is-padded_ byte-size: reader-skip_ 1
-    return content
+    return contents
 
-  skip-content_ byte-size/int -> none:
+  skip-contents_ byte-size/int -> none:
     reader-skip_ byte-size
     if is-padded_ byte-size: reader-skip_ 1
 
