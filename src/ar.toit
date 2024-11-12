@@ -6,6 +6,10 @@ import bytes
 import io
 import reader show Reader
 
+/**
+A library for reading and writing 'ar' archives.
+*/
+
 AR-HEADER_ ::= "!<arch>\x0A"
 
 FILE-NAME-OFFSET_ ::= 0
@@ -34,6 +38,12 @@ DETERMINISTIC-TIMESTAMP_ ::= 0
 DETERMINISTIC-OWNER-ID_  ::= 0
 DETERMINISTIC-GROUP-ID_  ::= 0
 DETERMINISTIC-MODE_      ::= 0b110_100_100  // Octal 644.
+
+/**
+Whether the given $bytes are in the 'ar' format.
+*/
+is-ar bytes/ByteArray -> bool:
+  return bytes.size >= AR-HEADER_.size and bytes[..AR-HEADER_.size] == AR-HEADER_
 
 /**
 An 'ar' archiver.
