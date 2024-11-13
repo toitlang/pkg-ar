@@ -40,10 +40,10 @@ DETERMINISTIC-GROUP-ID_  ::= 0
 DETERMINISTIC-MODE_      ::= 0b110_100_100  // Octal 644.
 
 /**
-Whether the given $bytes are in the 'ar' format.
+Whether the given $bytes start with an AR header.
 */
-is-ar bytes/ByteArray -> bool:
-  return bytes.size >= AR-HEADER_.size and bytes[..AR-HEADER_.size] == AR-HEADER_
+has-valid-header bytes/ByteArray -> bool:
+  return bytes.size >= AR-HEADER_.size and bytes[..AR-HEADER_.size] == AR-HEADER_.to-byte-array
 
 /**
 An 'ar' archiver.
