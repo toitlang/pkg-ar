@@ -42,7 +42,7 @@ DETERMINISTIC-MODE_      ::= 0b110_100_100  // Octal 644.
 /**
 Whether the given $bytes start with an AR header.
 */
-has-valid-header bytes/ByteArray -> bool:
+has-valid-ar-header bytes/ByteArray -> bool:
   return bytes.size >= AR-HEADER_.size and bytes[..AR-HEADER_.size] == AR-HEADER_.to-byte-array
 
 /**

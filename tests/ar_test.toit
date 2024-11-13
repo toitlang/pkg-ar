@@ -46,7 +46,7 @@ write-ar file-mapping/Map --add-with-ar-file/bool=false:
 run-test file-mapping/Map tmp-dir [generate-ar]:
   ba := generate-ar.call tmp-dir file-mapping
 
-  expect (has-valid-header ba)
+  expect (has-valid-ar-header ba)
 
   seen := {}
   count := 0
@@ -146,5 +146,5 @@ main:
   run-tests: |tmp-dir file-mapping| write-ar file-mapping
   run-tests: |tmp-dir file-mapping| write-ar file-mapping --add-with-ar-file
 
-  expect-not (has-valid-header "not an ar file".to-byte-array)
-  expect-not (has-valid-header #[])
+  expect-not (has-valid-ar-header "not an ar file".to-byte-array)
+  expect-not (has-valid-ar-header #[])
